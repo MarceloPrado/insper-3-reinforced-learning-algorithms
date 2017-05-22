@@ -7,6 +7,6 @@ from main import random_search, environment
 
 random_search_episodes_to_converge = []
 for t in range(100):
-    random_search_episodes_to_converge.append(random_search(environment, 200))
+    random_search_episodes_to_converge.append(random_search(environment))
 
 print("Media de episodios necessarios para convergir no random_search: ", np.mean(random_search_episodes_to_converge))
