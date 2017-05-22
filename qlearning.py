@@ -62,7 +62,7 @@ class QLearning():
             state_0 = self.state_to_bucket(observation)
 
             for t in range(self.MAX_T):
-                self.env.render()
+                # self.env.render()
 
                 # Select an action
                 action = self.select_action(state_0, explore_rate)
