@@ -1,6 +1,7 @@
 "Esse arquivo testa diferentes modelos de RL para o enviroment de cartPole"
 import gym
 import numpy as np
+from qlearning import QLearning
 
 def run_episode(env, params, max_reward):
     'Roda o episódio por no max. 200 timesteps, retornanto o totalReward para esse set de params'
@@ -39,5 +40,8 @@ def random_search(env, max_reward):
     return episode_counter
 
 
-environment = gym.make("CartPole-v1")
+    
 
+environment = gym.make("CartPole-v1")
+# qlearning = QLearning(environment)
+# qlearning.simulate()
