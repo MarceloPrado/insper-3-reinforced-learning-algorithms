@@ -23,7 +23,7 @@ env = gym.make('CartPole-v0')
 env = gym.wrappers.Monitor(env, directory,force=True)
 
 # Number of discrete states (bucket) per state dimension
-NUM_BUCKETS = (1, 1, 6, 2)  # (x, x', theta, theta')
+NUM_BUCKETS = (1, 1, 6, 3)  # (x, x', theta, theta')
 # Number of discrete actions
 NUM_ACTIONS = env.action_space.n # (left, right)
 # Bounds for each discrete state
@@ -37,8 +37,8 @@ ACTION_INDEX = len(NUM_BUCKETS)
 q_table = np.zeros(NUM_BUCKETS + (NUM_ACTIONS,))
 
 ## Learning related constants
-MIN_EXPLORE_RATE = 0.03
-MIN_LEARNING_RATE = 0.08
+MIN_EXPLORE_RATE = 0.01
+MIN_LEARNING_RATE = 0.1
 
 ## Defining the simulation related constants
 NUM_EPISODES = 1000
