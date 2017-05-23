@@ -6,15 +6,12 @@ import os
 
 def run_episode(env, params, max_reward):
     'Roda o episodio por no max. 200 timesteps, retornanto o totalReward para esse set de params'
-    observation = env.reset()
+    state = env.np_random.uniform(low=-0.05, high=0.05, size=(4,))
+    env.steps_beyond_done = None
+    observation = np.array(state)
+    # observation = env.reset()
     totalreward = 0
     for _ in range(max_reward):
-        # observation = [-0.00903545,  0.04692389, -0.04299039, -0.01087178]
-        # observation = env.reset() -- precisa fazer mas da erro
-        state = np.random.uniform(low=-0.05, high=0.05, size=(4,))
-        steps_beyond_done = None
-        observation = np.array(state)
-        # print (observation)
         # env.render() #para ver treinado
         action = 0 if np.matmul(params, observation) < 0 else 1
         observation, reward, done, info = env.step(action)
@@ -47,17 +44,19 @@ def random_search(env, max_reward):
     return episode_counter
 out = 'gym/out'
 
-if out:
-	if not os.path.exists(out):
-		os.makedirs(out)
-else:
-	if not os.path.exists('gym-out/' + "CartPole-v1"):
-		os.makedirs('gym-out/' + "CartPole-v1")
-	out = 'gym-out/' + "CartPole-v1"
+# if out:
+# 	if not os.path.exists(out):
+# 		os.makedirs(out)
+# else:
+# 	if not os.path.exists('gym-out/' + "CartPole-v1"):
+# 		os.makedirs('gym-out/' + "CartPole-v1")
+# 	out = 'gym-out/' + "CartPole-v1"
 
-directory = "gym-out/"
-# environment = gym.make("CartPole-v1")
+# directory = "gym-out/"
 # print("opa3")
 # environment = gym.wrappers.Monitor(environment, directory,force=True)
 # environment.close()
 # gym.upload('gym-out/')
+
+environment = gym.make("CartPole-v1")
+random_search(environment, 200)
