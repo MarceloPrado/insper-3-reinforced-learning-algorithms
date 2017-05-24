@@ -7,7 +7,7 @@ import os
 
 def run_episode(env, params, max_reward):
     'Roda o episodio por no max. 200 timesteps, retornanto o totalReward para esse set de params'
-    observation = env.reset()
+    # observation = env.reset()
     totalreward = 0
     for _ in range(max_reward):
         env.render() #para ver treinado
@@ -32,11 +32,14 @@ def random_search(env, max_reward, streak_counter):
     for i_episode in range(1000):
         # print(streak)
         if streak == 0:
+            observation = env.reset()
             parameters = np.random.rand(4) * 2 - 1
         else:
             parameters = best_params
+        if streak >2:
+            observation = env.reset()
 
-        reward = run_episode(env, parameters, max_reward)
+        reward = run_episode(env, parameters, max_reward,observation)
         
         if reward >= best_reward:
             best_reward = reward
@@ -50,6 +53,7 @@ def random_search(env, max_reward, streak_counter):
             streak = 0
 
         if streak > streak_counter:
+            observation = env.reset()
             break
     
     return episode_counter
