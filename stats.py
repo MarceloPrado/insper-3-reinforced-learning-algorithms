@@ -4,81 +4,19 @@ import gym
 # from main import random_search
 import os
 
-# def run_episode(env, params, max_reward):
-#     'Roda o episodio por no max. 200 timesteps, retornanto o totalReward para esse set de params'
-#     print(env)
-#     observation = env.reset()
-#     totalreward = 0
-#     for _ in range(max_reward):
-#         # observation = [-0.00903545,  0.04692389, -0.04299039, -0.01087178]
-#         # observation = env.reset() -- precisa fazer mas da erro
-#         # state = np.random.uniform(low=-0.05, high=0.05, size=(4,))
-#         # steps_beyond_done = None
-#         # observation = np.array(state)
-#         # print (observation)
-#         # env.render() #para ver treinado
-#         action = 0 if np.matmul(params, observation) < 0 else 1
-#         observation, reward, done, info = env.step(action)
-#         totalreward += reward
-#         if done:
-#             break
-#     return totalreward
 
-# RUHMAN METHOD - bug
-# ele nao ta resetando na linha 31, bem no comeco mesmo. Ele ta usando sempre a 1a observation, nao conseguindo resetar para outras
-# ja tentei colocar os metodos de reset antes do for, mas isso causa aquele problema de chamar o reset sem ter encerrado
-# talvez precisamos chamar o close
 def run_episode(env, params, max_reward):
     'Roda o episodio por no max. 200 timesteps, retornanto o totalReward para esse set de params'
     observation = env.reset()
     totalreward = 0
     for _ in range(max_reward):
-        # observation = [-0.00903545,  0.04692389, -0.04299039, -0.01087178]
-        # observation = env.reset() -- precisa fazer mas da erro
-        state = np.random.uniform(low=-0.05, high=0.05, size=(4,))
-        steps_beyond_done = None
-        observation = np.array(state)
-        # print (observation)
-        # env.render() #para ver treinado
+        env.render() #para ver treinado
         action = 0 if np.matmul(params, observation) < 0 else 1
         observation, reward, done, info = env.step(action)
         totalreward += reward
         if done:
-            print("done")
             break
-    
     return totalreward
-
-# def run_episode(env, params, max_reward):
-#     'Roda o episodio por no max. 200 timesteps, retornanto o totalReward para esse set de params'
-#     state = np.random.uniform(low=-0.05, high=0.05, size=(4,))
-#     # env.steps_beyond_done = None
-#     # observation = np.array(state)
-#     observation = env.reset() 
-#     totalreward = 0
-#     for _ in range(max_reward):
-#         # env.render() #para ver treinado
-#         action = 0 if np.matmul(params, observation) < 0 else 1
-#         observation, reward, done, info = env.step(action)
-#         totalreward += reward
-#         if done:
-#             break
-#     return totalreward
-
-# def run_episode(env, params, max_reward):
-#     'Roda o episodio por no max. 200 timesteps, retornanto o totalReward para esse set de params'
-#     print("aqui")
-#     observation = env.reset()
-#     totalreward = 0
-#     for _ in range(max_reward):
-#         # env.render() #para ver treinado
-#         action = 0 if np.matmul(params, observation) < 0 else 1
-#         observation, reward, done, info = env.step(action)
-#         totalreward += reward
-#         print("ali")
-#         if done:
-#             break
-#     return totalreward
 
 
 
@@ -91,8 +29,8 @@ def random_search(env, max_reward, streak_counter):
     best_reward = 200
     streak = 0
     episode_counter = 0
-    for i_episode in range(30000):
-        print(streak)
+    for i_episode in range(1000):
+        # print(streak)
         if streak == 0:
             parameters = np.random.rand(4) * 2 - 1
         else:
@@ -116,18 +54,19 @@ def random_search(env, max_reward, streak_counter):
     
     return episode_counter
 
-out = 'gym/out'
+out = 'gym-out/'
 if out:
 	if not os.path.exists(out):
 		os.makedirs(out)
 else:
-	if not os.path.exists('gym-out/' + "CartPole-v1"):
-		os.makedirs('gym-out/' + "CartPole-v1")
-	out = 'gym-out/' + "CartPole-v1"
+	if not os.path.exists('gym-out/' + "CartPole-v0"):
+		os.makedirs('gym-out/' + "CartPole-v0")
+	out = 'gym-out/' + "CartPole-v0"
 
 directory = "gym-out/"
-env = gym.make("CartPole-v1")
-env = gym.wrappers.Monitor(env, directory,force=True,video_callable=lambda episode_id: episode_id%10000==0)
-random_search(env,200, 200)
+env = gym.make("CartPole-v0")
+env = gym.wrappers.Monitor(env, directory,force=True,video_callable=lambda episode_id: episode_id%100==0)
+random_search(env,200,200)
 env.close()
-# gym.upload('/Users/daniruhman/Desktop/Insper 3sem/Robotica/reinforced-learning-algorithms/gym-out',api_key="sk_38r7JkrtRbCqU5vjq6aK6g")
+gym.scoreboard.api_key = 'sk_bcOLtiCvTKS56VloVRQa6A'
+gym.upload('/Users/marceloprado/cartPoleRL/gym-out')

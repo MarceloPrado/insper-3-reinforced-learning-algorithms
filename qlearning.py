@@ -1,141 +1,145 @@
-import random
-import copy
-from collections import defaultdict
-from collections import deque
-from time import sleep
-
-from collections import namedtuple
+import gym
 import numpy as np
+import random
 import math
-
-class QLearning():
-    def __init__(self, env):
-        self.env = env
-        # Number of discrete states (bucket) per state dimension
-        self.NUM_BUCKETS = (1, 1, 6, 3)  # (x, x', theta, theta')
-        # Number of discrete actions
-        self.NUM_ACTIONS = env.action_space.n # (left, right)
-        # Bounds for each discrete state
-        self.STATE_BOUNDS = list(zip(env.observation_space.low, env.observation_space.high))
-
-        self.STATE_BOUNDS[1] = [-0.5, 0.5]
-        self.STATE_BOUNDS[3] = [-math.radians(50), math.radians(50)]
-        # Index of the action
-        self.ACTION_INDEX = len(self.NUM_BUCKETS)
-
-        ## Creating a Q-Table for each state-action pair
-        self.q_table = np.zeros(self.NUM_BUCKETS + (self.NUM_ACTIONS,))
-
-        
-        ## Learning related constants
-        self.MIN_EXPLORE_RATE = 0.01
-        self.MIN_LEARNING_RATE = 0.1
-
-        ## Defining the simulation related constants
-        self.NUM_EPISODES = 1000
-        self.MAX_T = 250
-        self.STREAK_TO_END = 120
-        self.SOLVED_T = 199
-        self.DEBUG_MODE = True
-
-    
-    def get_explore_rate(self,t):
-        return max(self.MIN_EXPLORE_RATE, min(1, 1.0 - math.log10((t+1)/25)))
-
-    def get_learning_rate(self,t):
-        return max(self.MIN_LEARNING_RATE, min(0.5, 1.0 - math.log10((t+1)/25)))
-
-    def simulate(self):
-        ## Instantiating the learning related parameters
-        learning_rate = self.get_learning_rate(0)
-        explore_rate = self.get_explore_rate(0)
-        discount_factor = 0.99  # since the world is unchanging
-
-        num_streaks = 0
-
-        for episode in range(self.NUM_EPISODES):
-
-            # Reset the environment
-            observation = self.env.reset()
-
-            # Get the initial state matrix
-            state_0 = self.state_to_bucket(observation)
-
-            for t in range(self.MAX_T):
-                # self.env.render()
-
-                # Select an action
-                action = self.select_action(state_0, explore_rate)
-
-                # Execute the action
-                observation, reward, done, _ = self.env.step(action)
-
-                # Observe the result
-                state = self.state_to_bucket(observation)
-
-                # Update the Q based on the result
-                best_q = np.amax(self.q_table[state])
-                self.q_table[state_0 + (action,)] += learning_rate*(reward + discount_factor*(best_q) - self.q_table[state_0 + (action,)])
-
-                # Setting up for the next iteration
-                state_0 = state
-
-                # Print data
-                if (self.DEBUG_MODE):
-                    print("\nEpisode = %d" % episode)
-                    print("t = %d" % t)
-                    print("Action: %d" % action)
-                    print("State: %s" % str(state))
-                    print("Reward: %f" % reward)
-                    print("Best Q: %f" % best_q)
-                    print("Explore rate: %f" % explore_rate)
-                    print("Learning rate: %f" % learning_rate)
-                    print("Streaks: %d" % num_streaks)
-
-                    print("")
-
-                if done:                
-                    print("Episode %d finished after %f time steps" % (episode, t))
-                if (t >= self.SOLVED_T):
-                    num_streaks += 1
-                else:
-                    num_streaks = 0
-                break
-
-                sleep(0.25)
-
-            # It's considered done when it's solved over 120 times consecutively
-            if num_streaks > self.STREAK_TO_END:
-                break
-
-            # Update parameters
-            explore_rate = self.get_explore_rate(episode)
-            learning_rate = self.get_learning_rate(episode)
+from time import sleep
+import os
 
 
-    def select_action(self,state, explore_rate):
-        # Select a random action
-        if random.random() < explore_rate:
-            action = self.env.action_space.sample()
-        # Select the action with the highest q
+out = 'gym-out'
+
+if out:
+	if not os.path.exists(out):
+		os.makedirs(out)
+else:
+	if not os.path.exists('gym-out/' + "CartPole-v0"):
+		os.makedirs('gym-out/' + "CartPole-v0")
+	out = 'gym-out/' + "CartPole-v0"
+
+directory = "gym-out/"
+
+env = gym.make('CartPole-v0')
+env = gym.wrappers.Monitor(env, directory,force=True)
+
+
+# Simulation variables
+amount_of_episodes = 1000
+episode_timestep = 250
+streak_limit = 120
+solved_timestep = 199
+is_debugging = True
+
+# Number of discrete 'gaps' per state
+states_size = (1, 1, 6, 3)  # (x, x', theta, theta')
+# Number of possible actions
+actions_size = env.action_space.n # (left, right)
+
+# Limits for each discrete state
+state_limit = list(zip(env.observation_space.low, env.observation_space.high))
+state_limit[1] = [-0.5, 0.5]
+state_limit[3] = [-math.radians(50), math.radians(50)]
+
+# Q learning variables
+q_table = np.zeros(states_size + (actions_size,))
+exploration_rate = 0.03
+learning_rate = 0.08
+
+
+def simulate():
+    learning_rate = get_learning_rate(0)
+    explore_rate = get_exploration_rate(0)
+    gamma = 0.99
+
+    num_streaks = 0
+
+    for episode in range(amount_of_episodes):
+
+        # Reset the environment
+        obv = env.reset()
+
+        # initial state
+        state_0 = state_to_discrete_value(obv)
+        for t in range(episode_timestep):
+            env.render()
+
+            # Select an action
+            action = select_action(state_0, explore_rate)
+
+            # Execute the action
+            obv, reward, done, _ = env.step(action)
+
+            # Observe the result
+            state = state_to_discrete_value(obv)
+
+            # Update q table based on the result
+            best_q = np.amax(q_table[state])
+            q_table[state_0 + (action,)] += learning_rate*(reward + gamma*(best_q) - q_table[state_0 + (action,)])
+
+            # Setting up for the next iteration
+            state_0 = state
+
+            if (is_debugging):
+                print("\nEpisode = %d" % episode)
+                print("t = %d" % t)
+                print("Action: %d" % action)
+                print("State: %s" % str(state))
+                print("Reward: %f" % reward)
+                print("Best Q: %f" % best_q)
+                print("Explore rate: %f" % explore_rate)
+                print("Learning rate: %f" % learning_rate)
+                print("Streaks: %d \n" % num_streaks)
+
+            if done:
+               print("Episode %d finished after %f time steps" % (episode, t))
+               if (t >= solved_timestep):
+                   num_streaks += 1
+               else:
+                   num_streaks = 0
+               break
+
+        if num_streaks > streak_limit:
+            break
+
+        # Update parameters
+        explore_rate = get_exploration_rate(episode)
+        learning_rate = get_learning_rate(episode)
+
+
+def select_action(state, explore_rate):
+    # Select a random action
+    if random.random() < explore_rate:
+        action = env.action_space.sample()
+    # Select the action with the highest q-value
+    else:
+        action = np.argmax(q_table[state])
+    return action
+
+
+def get_exploration_rate(t):
+    return max(exploration_rate, min(1, 1.0 - math.log10((t+1)/25)))
+
+def get_learning_rate(t):
+    return max(learning_rate, min(0.5, 1.0 - math.log10((t+1)/25)))
+
+def state_to_discrete_value(state):
+    discrete_list = []
+    for i in range(len(state)):
+        if state[i] <= state_limit[i][0]:
+            discrete_index = 0
+        elif state[i] >= state_limit[i][1]:
+            discrete_index = states_size[i] - 1
         else:
-            action = np.argmax(self.q_table[state])
-        return action
+            # Mapping the state bounds to the bucket array
+            bound_width = state_limit[i][1] - state_limit[i][0]
+            offset = (states_size[i]-1)*state_limit[i][0]/bound_width
+            scaling = (states_size[i]-1)/bound_width
+            discrete_index = int(round(scaling*state[i] - offset))
+        discrete_list.append(discrete_index)
+    return tuple(discrete_list)
 
+if __name__ == "__main__":
+    simulate()
+    env.close()
+    gym.scoreboard.api_key = 'sk_bcOLtiCvTKS56VloVRQa6A'
+    gym.upload('/Users/marceloprado/cartPoleRL/gym-out')
 
-
-    def state_to_bucket(self,state):
-        bucket_indice = []
-        for i in range(len(state)):
-            if state[i] <= self.STATE_BOUNDS[i][0]:
-                bucket_index = 0
-            elif state[i] >= self.STATE_BOUNDS[i][1]:
-                bucket_index = self.NUM_BUCKETS[i] - 1
-            else:
-                # Mapping the state bounds to the bucket array
-                bound_width = self.STATE_BOUNDS[i][1] - self.STATE_BOUNDS[i][0]
-                offset = (self.NUM_BUCKETS[i]-1)*self.STATE_BOUNDS[i][0]/bound_width
-                scaling = (self.NUM_BUCKETS[i]-1)/bound_width
-                bucket_index = int(round(scaling*state[i] - offset))
-            bucket_indice.append(bucket_index)
-        return tuple(bucket_indice)
