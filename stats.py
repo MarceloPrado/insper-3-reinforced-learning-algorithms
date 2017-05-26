@@ -73,4 +73,4 @@ env = gym.wrappers.Monitor(env, directory,force=True,video_callable=lambda episo
 random_search(env,200,200)
 env.close()
 gym.scoreboard.api_key = 'sk_bcOLtiCvTKS56VloVRQa6A'
-gym.upload('/Users/marceloprado/cartPoleRL/gym-out')
+# gym.upload('/Users/marceloprado/cartPoleRL/gym-out')
