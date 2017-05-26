@@ -141,5 +141,5 @@ if __name__ == "__main__":
     simulate()
     env.close()
     gym.scoreboard.api_key = 'sk_bcOLtiCvTKS56VloVRQa6A'
-    gym.upload('/Users/marceloprado/cartPoleRL/gym-out')
+    # gym.upload('/Users/marceloprado/cartPoleRL/gym-out')
 
